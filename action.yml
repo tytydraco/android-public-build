@@ -12,15 +12,18 @@ runs:
 
     - name: Build release APK
       run: bash gradlew assembleRelease
+      shell: bash
 
     - name: Build release bundle
       run: bash gradlew bundleRelease
+      shell: bash
 
     - name: Get tag
       id: tag
       run: |
         tag="$(git rev-parse --short HEAD)_$(date +%s)"
         echo "::set-output name=tag::$tag"
+      shell: bash
 
     - name: Create release
       id: create_release
@@ -53,11 +56,13 @@ runs:
 
     - name: Fetch public keystore
       run: wget https://github.com/tytydraco/public-keystore/raw/main/public.jks
+      shell: bash
 
     - name: Sign release APK
       run: |
         apksigner="$(find $ANDROID_SDK_ROOT/build-tools -name apksigner | sort -r | head -n 1)"
         "$apksigner" sign --ks public.jks --ks-key-alias public --ks-pass pass:public --key-pass pass:public --in ./app/build/outputs/apk/release/app-release-unsigned.apk --out ./app/build/outputs/apk/release/app-release.apk
+      shell: bash
 
     - name: Upload signed release APK
       uses: actions/upload-release-asset@v1
