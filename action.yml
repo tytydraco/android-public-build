@@ -4,72 +4,67 @@ inputs:
   token:
     required: true
 
-on:
-  workflow_dispatch:
-  push:
+runs:
+  using: "composite"
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v2
 
-    steps:
-      - uses: actions/checkout@v2
+    - name: Build release APK
+      run: bash gradlew assembleRelease
 
-      - name: Build release APK
-        run: bash gradlew assembleRelease
+    - name: Build release bundle
+      run: bash gradlew bundleRelease
 
-      - name: Build release bundle
-        run: bash gradlew bundleRelease
+    - name: Get tag
+      id: tag
+      run: |
+        tag="$(git rev-parse --short HEAD)_$(date +%s)"
+        echo "::set-output name=tag::$tag"
 
-      - name: Get tag
-        id: tag
-        run: |
-          tag="$(git rev-parse --short HEAD)_$(date +%s)"
-          echo "::set-output name=tag::$tag"
+    - name: Create release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+      with:
+        tag_name: build-${{ steps.tag.outputs.tag }}
+        release_name: Build ${{ steps.tag.outputs.tag }}
 
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ inputs.token }}
-        with:
-          tag_name: build-${{ steps.tag.outputs.tag }}
-          release_name: Build ${{ steps.tag.outputs.tag }}
+    - name: Upload unsigned release APK
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./app/build/outputs/apk/release/app-release-unsigned.apk
+        asset_name: app-release-unsigned.apk
+        asset_content_type: application/apk
 
-      - name: Upload unsigned release APK
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ inputs.token }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./app/build/outputs/apk/release/app-release-unsigned.apk
-          asset_name: app-release-unsigned.apk
-          asset_content_type: application/apk
+    - name: Upload release bundle
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./app/build/outputs/bundle/release/app-release.aab
+        asset_name: app-release.aab
+        asset_content_type: application/aab
 
-      - name: Upload release bundle
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ inputs.token }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./app/build/outputs/bundle/release/app-release.aab
-          asset_name: app-release.aab
-          asset_content_type: application/aab
+    - name: Fetch public keystore
+      run: wget https://github.com/tytydraco/public-keystore/raw/main/public.jks
 
-      - name: Fetch public keystore
-        run: wget https://github.com/tytydraco/public-keystore/raw/main/public.jks
+    - name: Sign release APK
+      run: |
+        apksigner="$(find $ANDROID_SDK_ROOT/build-tools -name apksigner | sort -r | head -n 1)"
+        "$apksigner" sign --ks public.jks --ks-key-alias public --ks-pass pass:public --key-pass pass:public --in ./app/build/outputs/apk/release/app-release-unsigned.apk --out ./app/build/outputs/apk/release/app-release.apk
 
-      - name: Sign release APK
-        run: |
-          apksigner="$(find $ANDROID_SDK_ROOT/build-tools -name apksigner | sort -r | head -n 1)"
-          "$apksigner" sign --ks public.jks --ks-key-alias public --ks-pass pass:public --key-pass pass:public --in ./app/build/outputs/apk/release/app-release-unsigned.apk --out ./app/build/outputs/apk/release/app-release.apk
-
-      - name: Upload signed release APK
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ inputs.token }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./app/build/outputs/apk/release/app-release.apk
-          asset_name: app-release.apk
-          asset_content_type: application/apk
+    - name: Upload signed release APK
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./app/build/outputs/apk/release/app-release.apk
+        asset_name: app-release.apk
+        asset_content_type: application/apk
