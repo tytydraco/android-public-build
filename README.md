@@ -3,14 +3,14 @@ A GitHub Action to build my APKs and sign them with my public build keystore
 
 # Usage
 ```yml
-name: Build
+name: Android Public Build
 
 on:
   workflow_dispatch:
   push:
 
 jobs:
-  build:
+  android-public-build:
     runs-on: ubuntu-latest
 
     steps:
