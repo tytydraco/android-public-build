@@ -12,6 +12,7 @@ runs:
     
     - name: LF gradlew line endings
       run: sed -i 's/\r$//' gradlew
+      shell: bash
 
     - name: Build release APK
       run: bash gradlew assembleRelease
