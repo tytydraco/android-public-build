@@ -2,15 +2,16 @@
 A GitHub Action to build my APKs and sign them with my public build keystore
 
 # Usage
+`.github/workflows/build.yaml`
 ```yml
-name: Android Public Build
+name: Build
 
 on:
   workflow_dispatch:
   push:
 
 jobs:
-  android-public-build:
+  build:
     runs-on: ubuntu-latest
 
     steps:
