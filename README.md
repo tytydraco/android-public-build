@@ -5,7 +5,7 @@ A GitHub Action to build my APKs and sign them with my public build keystore
 Signing is done with my own [FOSS public key](https://github.com/tytydraco/public-keystore). Note that it is not a secure signature; this means that anyone can sign with this key. It is public so that my FOSS apps can be compiled with a FOSS key.
 
 # Usage
-`.github/workflows/build.yaml`
+`.github/workflows/build.yml`
 ```yml
 name: Build
 
