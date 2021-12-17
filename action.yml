@@ -1,5 +1,9 @@
 name: Android Public Build
 
+inputs:
+  token:
+    required: true
+
 on:
   workflow_dispatch:
   push:
@@ -27,7 +31,7 @@ runs:
       id: create_release
       uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.who-to-greet }}
       with:
         tag_name: build-${{ steps.tag.outputs.tag }}
         release_name: Build ${{ steps.tag.outputs.tag }}
@@ -35,7 +39,7 @@ runs:
     - name: Upload unsigned release APK
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.who-to-greet }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./app/build/outputs/apk/release/app-release-unsigned.apk
@@ -45,7 +49,7 @@ runs:
     - name: Upload release bundle
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.who-to-greet }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./app/build/outputs/bundle/release/app-release.aab
@@ -63,7 +67,7 @@ runs:
     - name: Upload signed release APK
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.who-to-greet }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./app/build/outputs/apk/release/app-release.apk
